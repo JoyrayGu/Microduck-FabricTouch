@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "captured_at_utc": "2026-10-21T06:26:59.923420+00:00",
+  "source": "Pi servo_status.py via read-only SSH",
+  "interpretation": "Physical ID keyed; joint names intentionally not inferred.",
+  "pi_reported_ids": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+  ],
+  "unqueried_ids": [
+    15
+  ],
+  "servos": {
+    "1": {
+      "mode": 3,
+      "torque": 0,
+      "goal_tick": 1024,
+      "present_tick": 1024
+    },
+    "2": {
+      "mode": 3,
+      "torque": 0,
+      "goal_tick": 3720,
+      "present_tick": 3720
+    },
+    "3": {
+      "mode": 3,
+      "torque": 0,
+      "goal_tick": 3635,
+      "present_tick": 3635
+    },
+    "4": {
+      "mode": 3,
+      "torque": 0,
+      "goal_tick": 1412,
+      "present_tick": 1412
+    },
+    "5": {
+      "mode": 3,
+      "torque": 0,
+      "goal_tick": 2149,
+      "present_tick": 2149
+    },
+    "6": {
+      "mode": 3,
+      "torque": 0,
+      "goal_tick": 2122,
+      "present_tick": 2122
+    },
+    "7": {
+      "mode": 3,
+      "torque": 0,
+      "goal_tick": 3645,
+      "present_tick": 3645
+    },
+    "8": {
+      "mode": 3,
+      "torque": 0,
+      "goal_tick": 410,
+      "present_tick": 410
+    },
+    "9": {
+      "mode": 3,
+      "torque": 0,
+      "goal_tick": 2111,
+      "present_tick": 2111
+    },
+    "10": {
+      "mode": 3,
+      "torque": 0,
+      "goal_tick": 2203,
+      "present_tick": 2203
+    },
+    "11": {
+      "mode": 3,
+      "torque": 0,
+      "goal_tick": 1963,
+      "present_tick": 1963
+    },
+    "12": {
+      "mode": 3,
+      "torque": 0,
+      "goal_tick": 11,
+      "present_tick": 11
+    },
+    "13": {
+      "mode": 3,
+      "torque": 0,
+      "goal_tick": 1735,
+      "present_tick": 1735
+    },
+    "14": {
+      "mode": 3,
+      "torque": 0,
+      "goal_tick": 1832,
+      "present_tick": 1832
+    }
+  },
+  "raw_stdout": "ID01 mode=3 t=0 goal=1024 present=1024\nID02 mode=3 t=0 goal=3720 present=3720\nID03 mode=3 t=0 goal=3635 present=3635\nID04 mode=3 t=0 goal=1412 present=1412\nID05 mode=3 t=0 goal=2149 present=2149\nID06 mode=3 t=0 goal=2122 present=2122\nID07 mode=3 t=0 goal=3645 present=3645\nID08 mode=3 t=0 goal=410 present=410\nID09 mode=3 t=0 goal=2111 present=2111\nID10 mode=3 t=0 goal=2203 present=2203\nID11 mode=3 t=0 goal=1963 present=1963\nID12 mode=3 t=0 goal=11 present=11\nID13 mode=3 t=0 goal=1735 present=1735\nID14 mode=3 t=0 goal=1832 present=1832\nMODES_ALL_POSITION\nTORQUE_OFF_IDS=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]\n"
+}

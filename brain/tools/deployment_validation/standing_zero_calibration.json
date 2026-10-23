@@ -1,0 +1,132 @@
+{
+  "source": "new_hardware_manual_standing_pose",
+  "created_at_unix": 1790574511.4611714,
+  "sample_count": 7,
+  "last_partial_update_unix": 1790665078,
+  "last_partial_update": {
+    "reason": "id1_id6_manual_foot_recalibration",
+    "raw_counts": {
+      "1": 1701,
+      "6": 1683
+    }
+  },
+  "formula": "q_model = (raw_hw - motor_offset) * motor_sign",
+  "motor_id": {
+    "left_hip_yaw": 10,
+    "left_hip_roll": 9,
+    "left_hip_pitch": 8,
+    "left_knee": 7,
+    "left_ankle": 6,
+    "neck_pitch": 12,
+    "head_pitch": 11,
+    "head_yaw": 13,
+    "head_roll": 14,
+    "right_hip_yaw": 5,
+    "right_hip_roll": 4,
+    "right_hip_pitch": 3,
+    "right_knee": 2,
+    "right_ankle": 1
+  },
+  "motor_sign": {
+    "left_hip_yaw": 1.0,
+    "left_hip_roll": 1.0,
+    "left_hip_pitch": 1.0,
+    "left_knee": 1.0,
+    "left_ankle": 1.0,
+    "neck_pitch": 1.0,
+    "head_pitch": 1.0,
+    "head_yaw": 1.0,
+    "head_roll": 1.0,
+    "right_hip_yaw": 1.0,
+    "right_hip_roll": 1.0,
+    "right_hip_pitch": 1.0,
+    "right_knee": 1.0,
+    "right_ankle": 1.0
+  },
+  "motor_offset": {
+    "left_hip_yaw": -0.80227,
+    "left_hip_roll": 0.10386999999999999,
+    "left_hip_pitch": 1.07619,
+    "left_knee": -0.37543,
+    "left_ankle": -1.0129029875782591,
+    "neck_pitch": 1.21259,
+    "head_pitch": -1.0024758156392832,
+    "head_yaw": -0.41111,
+    "head_roll": -0.42184,
+    "right_hip_yaw": 0.05983,
+    "right_hip_roll": -1.08716,
+    "right_hip_pitch": -1.09,
+    "right_knee": 1.0227700000000002,
+    "right_ankle": -0.0792913333963175
+  },
+  "training_default": {
+    "left_hip_yaw": 0.0,
+    "left_hip_roll": -0.087,
+    "left_hip_pitch": -0.458,
+    "left_knee": -0.005,
+    "left_ankle": 0.453,
+    "neck_pitch": 0.349,
+    "head_pitch": 0.349,
+    "head_yaw": 0.0,
+    "head_roll": 0.0,
+    "right_hip_yaw": 0.0,
+    "right_hip_roll": 0.087,
+    "right_hip_pitch": 0.458,
+    "right_knee": 0.005,
+    "right_ankle": -0.453
+  },
+  "raw_position_rad": {
+    "left_hip_yaw": -0.80227,
+    "left_hip_roll": 0.01687,
+    "left_hip_pitch": 0.61819,
+    "left_knee": -0.38043,
+    "left_ankle": -0.5599029875782591,
+    "neck_pitch": 1.56159,
+    "head_pitch": -0.6534758156392831,
+    "head_yaw": -0.41111,
+    "head_roll": -0.42184,
+    "right_hip_yaw": 0.05983,
+    "right_hip_roll": -1.00016,
+    "right_hip_pitch": -0.632,
+    "right_knee": 1.02777,
+    "right_ankle": -0.5322913333963175
+  },
+  "raw_std_rad": {
+    "left_hip_yaw": 0.000762102355330299,
+    "left_hip_roll": 0.0,
+    "left_hip_pitch": 0.0010751535248702023,
+    "left_knee": 0.0006911835457225313,
+    "left_ankle": 0.000762102355330299,
+    "neck_pitch": 0.0,
+    "head_pitch": 0.0,
+    "head_yaw": 0.0,
+    "head_roll": 0.0,
+    "right_hip_yaw": 0.0,
+    "right_hip_roll": 0.0,
+    "right_hip_pitch": 0.0,
+    "right_knee": 0.0,
+    "right_ankle": 0.0
+  },
+  "imu_reference_sample_count": 120,
+  "imu_projected_gravity_reference": [
+    0.987067006551449,
+    -0.11869278794680616,
+    -0.10724250540472474
+  ],
+  "imu_projected_gravity_std": [
+    0.0015945647822336675,
+    0.005326837447228912,
+    0.00888109607311588
+  ],
+  "imu_gyro_bias": [
+    0.003662109375,
+    0.004280598958333334,
+    -0.001220703125
+  ],
+  "imu_gyro_std": [
+    0.029543840257520097,
+    0.03858702799695765,
+    0.03397825924152665
+  ],
+  "imu_upright_error_deg": 9.205398332811853
+}

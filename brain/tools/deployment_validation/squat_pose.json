@@ -1,0 +1,28 @@
+{
+  "joints": {
+    "1": 2508,
+    "2": 3669,
+    "3": 1672,
+    "6": 776,
+    "7": 604,
+    "8": 2229
+  },
+  "stand_counts": {
+    "1": 1701,
+    "2": 2718,
+    "3": 1636,
+    "6": 1683,
+    "7": 1800,
+    "8": 2451
+  },
+  "delta_counts": {
+    "1": 807,
+    "2": 951,
+    "3": 36,
+    "6": -907,
+    "7": -1196,
+    "8": -222
+  },
+  "captured_at": "2026-09-29T20:20:28",
+  "note": "AUTHORITATIVE squat bottom: the pose the Raspberry Pi actually loaded during the 1s squat-stand runs that reproduced 5/5 on 2026-09-30 (the script prints joints=... on every run). Deep squat driven by knee + ankle with almost no hip fold. Do not replace it with the older 2026-09-29T19:06 capture (joints 1149/1669/1179/2235/2849/2908), which was never verified on hardware."
+}

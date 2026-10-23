@@ -1,0 +1,34 @@
+{
+  "frames": 480,
+  "layouts": {
+    "64x64_4bit": {
+      "observed_max": 15,
+      "mean_active_cells": 1.36,
+      "mean_centroid": [
+        36.12,
+        37.14
+      ]
+    },
+    "32x32_16bit": {
+      "observed_max": 54784,
+      "mean_active_cells": 1.498,
+      "mean_centroid": [
+        17.82,
+        18.67
+      ]
+    }
+  },
+  "port": "COM7",
+  "baud": 9600,
+  "seconds": 12.0,
+  "scan": {
+    "bytes_in": 987360,
+    "frames": 480,
+    "discarded_bytes": 0,
+    "length_histogram": {
+      "2057": 480
+    },
+    "tail_mismatches": 0
+  },
+  "frames_per_second": 39.99
+}

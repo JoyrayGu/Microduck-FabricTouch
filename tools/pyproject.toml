@@ -1,0 +1,9 @@
+[project]
+name = "microduck-behavior-control"
+version = "0.1.0"
+description = "Offline-first pose planning and safety checks for the Microduck"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

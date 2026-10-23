@@ -1,0 +1,6 @@
+[project]
+name = "microduck-skin-diagnostics"
+version = "0.1.0"
+description = "Read-only diagnostics for the Microduck tactile skin serial stream"
+requires-python = ">=3.11"
+dependencies = ["pyserial>=3.5"]

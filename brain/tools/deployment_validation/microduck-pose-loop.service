@@ -1,0 +1,16 @@
+[Unit]
+Description=Microduck pose rotation loop (sit / lift-left / lift-right / tilt-head)
+After=network.target
+
+[Service]
+Type=simple
+User=pi4
+SupplementaryGroups=dialout
+Environment=PYTHONPATH=/home/pi4/microduck-replica-next/microduck/src
+WorkingDirectory=/home/pi4/microduck-replica-next/tools/deployment_validation
+ExecStart=/home/pi4/microduck_venv/bin/python /home/pi4/microduck-replica-next/tools/deployment_validation/pose_loop.py --cycle 10
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

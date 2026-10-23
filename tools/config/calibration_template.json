@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "source": "pending_manual_calibration",
+  "hardware": {
+    "protocol": 2.0,
+    "baud": 1000000,
+    "ticks_per_revolution": 4096,
+    "single_turn": true
+  },
+  "joints": {
+    "1": {"name": "left_ankle", "direction": null, "zero_tick": null, "offset_rad": 0.0, "min_tick": null, "max_tick": null, "validated": false},
+    "2": {"name": "left_knee", "direction": null, "zero_tick": null, "offset_rad": 0.0, "min_tick": null, "max_tick": null, "validated": false},
+    "3": {"name": "left_hip_pitch", "direction": null, "zero_tick": null, "offset_rad": 0.0, "min_tick": null, "max_tick": null, "validated": false},
+    "4": {"name": "left_hip_roll", "direction": null, "zero_tick": null, "offset_rad": 0.0, "min_tick": null, "max_tick": null, "validated": false},
+    "5": {"name": "left_hip_yaw", "direction": null, "zero_tick": null, "offset_rad": 0.0, "min_tick": null, "max_tick": null, "validated": false},
+    "6": {"name": "right_ankle", "direction": null, "zero_tick": null, "offset_rad": 0.0, "min_tick": null, "max_tick": null, "validated": false},
+    "7": {"name": "right_knee", "direction": null, "zero_tick": null, "offset_rad": 0.0, "min_tick": null, "max_tick": null, "validated": false},
+    "8": {"name": "right_hip_pitch", "direction": null, "zero_tick": null, "offset_rad": 0.0, "min_tick": null, "max_tick": null, "validated": false},
+    "9": {"name": "right_hip_roll", "direction": null, "zero_tick": null, "offset_rad": 0.0, "min_tick": null, "max_tick": null, "validated": false},
+    "10": {"name": "right_hip_yaw", "direction": null, "zero_tick": null, "offset_rad": 0.0, "min_tick": null, "max_tick": null, "validated": false},
+    "11": {"name": "head_pitch", "direction": null, "zero_tick": null, "offset_rad": 0.0, "min_tick": null, "max_tick": null, "validated": false},
+    "12": {"name": "neck_pitch", "direction": null, "zero_tick": null, "offset_rad": 0.0, "min_tick": null, "max_tick": null, "validated": false},
+    "13": {"name": "head_yaw", "direction": null, "zero_tick": null, "offset_rad": 0.0, "min_tick": null, "max_tick": null, "validated": false},
+    "14": {"name": "head_roll", "direction": null, "zero_tick": null, "offset_rad": 0.0, "min_tick": null, "max_tick": null, "validated": false},
+    "15": {"name": "mouth", "direction": null, "zero_tick": null, "offset_rad": 0.0, "min_tick": null, "max_tick": null, "validated": false, "participates_in_stand": false}
+  }
+}

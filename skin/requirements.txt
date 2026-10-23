@@ -1,0 +1,13 @@
+# ---- 必需：USB 通道（默认）----
+# 设备通过 USB 枚举成虚拟串口（CDC / USB 转串口），因此需要 pyserial
+pyserial>=3.5
+
+# ---- 可选：蓝牙 BLE 通道（--ble）----
+bleak>=0.22
+
+# ---- 可选：全局 Esc 急停；非 Windows 平台的鼠标控制 ----
+# Windows 上鼠标控制用程序自带的 SendInput（纯 ctypes，无需安装）
+pynput>=1.7
+
+# ---- 可选：备用鼠标后端（--backend pyautogui） ----
+pyautogui>=0.9.54

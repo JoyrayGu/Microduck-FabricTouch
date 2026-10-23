@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "kind": "direction_observations",
+  "note": "Manual, torque-off observations. These record raw encoder tick direction only and are NOT a validated stand calibration.",
+  "observations": [
+    {
+      "servo_id": 1,
+      "joint": "left_ankle",
+      "observations": [
+        {"pose": "standing", "tick": 1932, "snapshot": "id1-before.json"},
+        {"pose": "plantarflexion", "tick": 2248, "snapshot": "id1-forward.json"},
+        {"pose": "dorsiflexion", "tick": 1985, "snapshot": "id1-backward.json"}
+      ],
+      "raw_direction": "increasing tick = plantarflexion (heel up); decreasing tick = dorsiflexion (toes up)",
+      "confidence": "provisional"
+    },
+    {
+      "servo_id": 6,
+      "joint": "right_ankle",
+      "observations": [
+        {"pose": "standing", "tick": 1851, "snapshot": "id6-before.json"},
+        {"pose": "plantarflexion", "tick": 1478, "snapshot": "id6-plantarflexion.json"},
+        {"pose": "dorsiflexion", "tick": 1876, "snapshot": "id6-dorsiflexion.json"}
+      ],
+      "raw_direction": "decreasing tick = plantarflexion (heel up); increasing tick = dorsiflexion (toes up)",
+      "confidence": "provisional"
+    },
+    {
+      "servo_id": 2,
+      "joint": "left_knee",
+      "observations": [
+        {"pose": "neutral", "tick": 2709, "snapshot": "id2-neutral.json"},
+        {"pose": "flexed", "tick": 3234, "snapshot": "id2-flexed.json"},
+        {"pose": "extended", "tick": 2927, "snapshot": "id2-extended.json"},
+        {"pose": "earlier_forward", "tick": 2523, "snapshot": "knee-observation.json"},
+        {"pose": "earlier_backward", "tick": 3203, "snapshot": "left-knee-backward.json"}
+      ],
+      "raw_direction": "increasing tick = knee flexed (heel toward buttock); decreasing tick = knee extended",
+      "confidence": "provisional",
+      "caveat": "Flex/extend changed together with ankle and hip, so the mapping is directionally consistent but not isolated."
+    },
+    {
+      "servo_id": 7,
+      "joint": "right_knee",
+      "observations": [
+        {"pose": "rest", "tick": 206, "snapshot": "id7-before.json"},
+        {"pose": "knee_forward", "tick": 897, "snapshot": "id7-forward.json"},
+        {"pose": "knee_backward", "tick": 535, "snapshot": "id7-backward.json"}
+      ],
+      "raw_direction": "increasing tick = knee forward; decreasing tick = knee backward",
+      "confidence": "provisional"
+    },
+    {
+      "servo_id": 3,
+      "joint": "left_hip_pitch",
+      "observations": [
+        {"pose": "standing", "tick": 2310, "snapshot": "id3-before.json"},
+        {"pose": "thigh_forward", "tick": 2660, "snapshot": "id3-thigh-forward.json"},
+        {"pose": "thigh_backward", "tick": 1660, "snapshot": "id3-thigh-backward.json"}
+      ],
+      "raw_direction": "increasing tick = thigh forward; decreasing tick = thigh backward",
+      "confidence": "provisional"
+    },
+    {
+      "servo_id": 8,
+      "joint": "right_hip_pitch",
+      "observations": [
+        {"pose": "standing", "tick": 1681, "snapshot": "id3-before.json"},
+        {"pose": "thigh_forward", "tick": 1294, "snapshot": "id3-thigh-forward.json"},
+        {"pose": "thigh_backward", "tick": 2179, "snapshot": "id3-thigh-backward.json"}
+      ],
+      "raw_direction": "decreasing tick = thigh forward; increasing tick = thigh backward",
+      "confidence": "provisional"
+    },
+    {
+      "servo_id": 4,
+      "joint": "left_hip_roll",
+      "observations": [
+        {"pose": "neutral", "tick": 1460, "snapshot": "id4-id9-neutral.json"},
+        {"pose": "left_split", "tick": 1124, "snapshot": "id4-left-split.json"},
+        {"pose": "both_adduct", "tick": 1681, "snapshot": "id4-id9-adduct.json"}
+      ],
+      "raw_direction": "decreasing tick = left leg splays outward (abduction); increasing tick = inward (adduction)",
+      "confidence": "confirmed",
+      "caveat": "Left split isolated the left side: ID 4 -336 while ID 9 only -69. Yaw (ID 5) stayed at +15, so this is roll, not yaw."
+    },
+    {
+      "servo_id": 9,
+      "joint": "right_hip_roll",
+      "observations": [
+        {"pose": "neutral", "tick": 2225, "snapshot": "id4-id9-neutral.json"},
+        {"pose": "right_split", "tick": 2406, "snapshot": "id9-right-split.json"},
+        {"pose": "both_adduct", "tick": 1927, "snapshot": "id4-id9-adduct.json"}
+      ],
+      "raw_direction": "increasing tick = right leg splays outward (abduction); decreasing tick = inward (adduction)",
+      "confidence": "confirmed",
+      "caveat": "Right split isolated the right side: ID 9 +181 while ID 4 only -69. Direction is mirrored relative to ID 4."
+    },
+    {
+      "servo_id": 5,
+      "joint": "left_hip_yaw",
+      "observations": [
+        {"pose": "neutral", "tick": 2238, "snapshot": "id10-neutral2.json"},
+        {"pose": "abduction_outward", "tick": 2574, "snapshot": "id4-retest-abduction.json"},
+        {"pose": "neutral", "tick": 2428, "snapshot": "id10-internal-neutral.json"},
+        {"pose": "internal_rotation", "tick": 1630, "snapshot": "id5-internal.json"}
+      ],
+      "raw_direction": "increasing tick = outward rotation (toes out, splayed); decreasing tick = inward rotation (toes in)",
+      "confidence": "confirmed",
+      "caveat": "Outward sample changed surrounding joints too; direction is supported by two opposite-direction samples."
+    },
+    {
+      "servo_id": 10,
+      "joint": "right_hip_yaw",
+      "observations": [
+        {"pose": "neutral", "tick": 1325, "snapshot": "id10-neutral2.json"},
+        {"pose": "abduction_outward", "tick": 1228, "snapshot": "id10-abduction2.json"},
+        {"pose": "neutral", "tick": 1562, "snapshot": "id10-internal-neutral.json"},
+        {"pose": "internal_rotation", "tick": 2045, "snapshot": "id10-internal.json"}
+      ],
+      "raw_direction": "decreasing tick = outward rotation (toes out); increasing tick = inward rotation (toes in)",
+      "confidence": "confirmed",
+      "caveat": "Mirror of ID 5. Outward sample was weaker; inward sample dominant."
+    },
+    {
+      "servo_id": 11,
+      "joint": "head_pitch",
+      "observations": [
+        {"pose": "active_test_before", "tick": 1880, "snapshot": "servo_probe id11 delta=0"},
+        {"pose": "active_test_plus_100_ticks", "tick": 1978, "snapshot": "servo_probe id11 delta=100 execute"}
+      ],
+      "raw_direction": "increasing tick = head pitches down (nod); decreasing tick = head pitches up",
+      "confidence": "confirmed",
+      "caveat": "Confirmed by isolated single-servo test (only ID 11 written, ID 11 returned to 1880 and torque turned off after). Earlier manual samples were inconclusive because moving the head by hand mostly moved the neck."
+          },
+          {
+            "servo_id": 12,
+            "joint": "neck_pitch",
+            "observations": [
+              {"pose": "active_test_before", "tick": 3776, "snapshot": "servo_probe id12 delta=0"},
+              {"pose": "active_test_plus_100_ticks", "tick": 3882, "snapshot": "servo_probe id12 delta=100 execute"}
+            ],
+            "raw_direction": "increasing tick = neck leans back (extension); decreasing tick = neck leans forward",
+            "confidence": "confirmed",
+            "caveat": "Isolated single-servo test. After torque-off the neck settled to 4068, so this is a direction record only, not a zero or stand target."
+          },
+          {
+            "servo_id": 13,
+            "joint": "head_yaw",
+            "observations": [
+              {"pose": "active_test_before", "tick": 1625, "snapshot": "servo_probe id13 delta=0"},
+              {"pose": "active_test_plus_100_ticks", "tick": 1722, "snapshot": "servo_probe id13 delta=100 execute"},
+              {"pose": "visual_center_torque_off", "tick": 1854, "snapshot": "manual, torque off, head visually centered"},
+              {"pose": "calibrated_left_endpoint", "tick": 1685, "snapshot": "servo_goto target=1685, landed 1688"},
+              {"pose": "calibrated_right_endpoint", "tick": 2023, "snapshot": "servo_goto target=2023, landed 2020"}
+            ],
+            "raw_direction": "increasing tick = head turns to the robot's right; decreasing tick = head turns to the robot's left",
+            "confidence": "confirmed",
+            "caveat": "Isolated single-servo test. Head stayed at 1722 after torque-off, so gravity did not move it. Calibrated 2026-10-21: visual center is 1854, NOT 2048 (off by -194 ticks). Symmetric span is +/-169 ticks: left 1685, right 2023, both verified on hardware with <=3 tick error. Do not derive endpoints by mirroring about 2048 - the old 2048 - (1736-2048) = 2360 formula overshoots the real cable limit by 337 ticks."
+          },
+          {
+            "servo_id": 14,
+            "joint": "head_roll",
+            "observations": [
+              {"pose": "active_test_before", "tick": 1860, "snapshot": "servo_probe id14 delta=0"},
+              {"pose": "active_test_plus_100_ticks", "tick": 1950, "snapshot": "servo_probe id14 delta=100 execute"}
+            ],
+            "raw_direction": "increasing tick = head rolls down to the robot's right; decreasing tick = rolls down to the left",
+            "confidence": "confirmed",
+            "caveat": "Isolated single-servo test. Head stayed at 1950 after torque-off."
+          },
+          {
+            "servo_id": 15,
+            "joint": "mouth",
+            "observations": [
+              {"pose": "hand_pose_1", "tick": 2171, "snapshot": "manual, torque off"},
+              {"pose": "hand_pose_2", "tick": 1814, "snapshot": "manual, torque off"},
+              {"pose": "closed_manual", "tick": 2188, "snapshot": "manual closed, torque off"},
+              {"pose": "active_test_minus_30", "tick": 2165, "snapshot": "servo_probe id15 delta=-30 execute"},
+              {"pose": "active_test_minus_150", "tick": 2043, "snapshot": "servo_probe id15 delta=-150 execute"}
+            ],
+            "raw_direction": "decreasing tick = mouth opens; increasing tick = mouth closes",
+            "confidence": "confirmed",
+            "caveat": "Confirmed by isolated single-servo tests: -30 gave a subtle opening, -150 gave an obvious opening. Servo returned to about 2044-2188 on its own; closed position ~2188 is a candidate, not a validated limit.",
+            "candidate_closed_tick": 2188,
+            "participates_in_stand": false
+          }
+        ],
+  "unmeasured": []
+}
