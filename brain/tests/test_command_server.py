@@ -67,14 +67,14 @@ def _instant_library() -> ActionLibrary:
     return ActionLibrary(
         actions={"head_roll": action},
         gesture_map={
-            "tap": "head_roll",
-            "single_stroke": "head_roll",
-            "back_forth_stroke": "head_roll",
+            "static_touch": "head_roll",
+            "dynamic_touch": "head_roll",
+            "dynamic_touch": "head_roll",
         },
     )
 
 
-def _event(gesture: str = "tap", event_id: str = "evt-1", **overrides) -> dict:
+def _event(gesture: str = "static_touch", event_id: str = "evt-1", **overrides) -> dict:
     payload = {
         "version": S.PROTOCOL_VERSION,
         "event_id": event_id,
@@ -168,7 +168,7 @@ class _ServerTestCase(unittest.TestCase):
 class ReplyTests(_ServerTestCase):
     def test_valid_event_accepted(self):
         client = self.connect()
-        event = client.send_event(gesture="tap", event_id="ok-1")
+        event = client.send_event(gesture="static_touch", event_id="ok-1")
         reply = client.read_reply()
         self.assertTrue(reply["accepted"])
         self.assertEqual(reply["action"], "head_roll")
@@ -406,9 +406,9 @@ class StepFailureReportingTests(unittest.TestCase):
         server = CommandServer(
             host="127.0.0.1", port=0,
             library=ActionLibrary(actions={"head_roll": multi},
-                                  gesture_map={"tap": "head_roll",
-                                               "single_stroke": "head_roll",
-                                               "back_forth_stroke": "head_roll"}),
+                                  gesture_map={"static_touch": "head_roll",
+                                               "dynamic_touch": "head_roll",
+                                               "dynamic_touch": "head_roll"}),
             runtime=FailOnFirst(),
             dry_run=True,
             log=logs.append,

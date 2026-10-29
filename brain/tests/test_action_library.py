@@ -130,34 +130,30 @@ class ResolveTests(unittest.TestCase):
     def setUp(self):
         self.lib = L.ActionLibrary()
 
-    def test_tap_maps_to_head_roll(self):
-        """短促接触 -> 歪头（只动 ID14）。"""
-        action = self.lib.resolve("tap")
+    def test_static_touch_maps_to_head_roll(self):
+        action = self.lib.resolve("static_touch")
         self.assertIsNotNone(action)
         self.assertEqual(action.name, "head_roll")
 
-    def test_single_stroke_maps_to_open_mouth(self):
-        """单向滑动 -> 张嘴再闭合（只动 ID15）。"""
-        action = self.lib.resolve("single_stroke")
+    def test_dynamic_touch_maps_to_open_mouth(self):
+        action = self.lib.resolve("dynamic_touch")
         self.assertEqual(action.name, "open_mouth")
 
-    def test_back_forth_stroke_maps_to_open_mouth(self):
-        """来回抚摸 -> 同一个张嘴动作。"""
-        action = self.lib.resolve("back_forth_stroke")
+    def test_dynamic_touch_maps_to_open_mouth_for_repeated_motion(self):
+        action = self.lib.resolve("dynamic_touch")
         self.assertEqual(action.name, "open_mouth")
 
-    def test_head_wag_has_no_gesture_mapping(self):
-        """head_wag 已完成标定但当前无手势触发它（备用动作）。"""
+    def test_head_roll_is_mapped_for_static_touch(self):
         mapped = set(L.DEFAULT_GESTURE_TO_ACTION.values())
-        self.assertNotIn("head_wag", mapped)
+        self.assertIn("head_roll", mapped)
         self.assertIn("head_wag", self.lib.names)
 
     def test_unknown_gesture_resolves_to_none(self):
         self.assertIsNone(self.lib.resolve("dance"))
 
     def test_mapping_to_missing_action_resolves_none(self):
-        lib = L.ActionLibrary(actions={}, gesture_map={"tap": "head_roll"})
-        self.assertIsNone(lib.resolve("tap"))
+        lib = L.ActionLibrary(actions={}, gesture_map={"static_touch": "head_roll"})
+        self.assertIsNone(lib.resolve("static_touch"))
 
 
 class CustomLibraryTests(unittest.TestCase):
@@ -166,9 +162,9 @@ class CustomLibraryTests(unittest.TestCase):
             name="nod",
             frames=[L.Keyframe(pose={11: 2100}, duration=0.1)],
         )
-        lib = L.ActionLibrary(actions={"nod": action}, gesture_map={"tap": "nod"})
+        lib = L.ActionLibrary(actions={"nod": action}, gesture_map={"static_touch": "nod"})
         self.assertEqual(lib.names, ["nod"])
-        self.assertIs(lib.resolve("tap"), action)
+        self.assertIs(lib.resolve("static_touch"), action)
 
 
 if __name__ == "__main__":

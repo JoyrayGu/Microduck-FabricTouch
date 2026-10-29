@@ -162,8 +162,8 @@ def build_default_library(
             Keyframe(pose={HEAD_ROLL_ID: HEAD_ROLL_LEFT}, duration=0.15),    # 保持
             Keyframe(pose={HEAD_ROLL_ID: HEAD_ROLL_CENTER}, duration=0.25),  # 回中
         ],
-        timeout_s=4.0,
-        description="头部向右歪再直接摆向左并回正（只动 ID14，约 1.4s）",
+        timeout_s=10.0,
+        description="头部向右歪再直接摆向左并回正（只动 ID14，分步缓动执行）",
     )
 
     # ---- head_wag：头部左右摆动（备用，当前无手势映射） ---- #
@@ -220,13 +220,11 @@ def build_default_library(
 #: 头部不停做动作会明显影响体验。因此「短促接触」给一个可见的歪头，
 #: 「持续滑动」给一次张嘴——张嘴是短促的、有明确结束的动作，不会持续干扰。
 #:
-#:   tap                -> head_roll   （短促接触：左右歪头，只动 ID14）
-#:   single_stroke      -> open_mouth  （单向滑动：张嘴再闭合，只动 ID15）
-#:   back_forth_stroke  -> open_mouth  （来回抚摸：同一个张嘴动作）
+#:   static_touch  -> head_roll   （静态触摸：只动 ID14）
+#:   dynamic_touch -> open_mouth  （单指、多指或部分滑移：只动 ID15）
 DEFAULT_GESTURE_TO_ACTION: Dict[str, str] = {
-    "tap": "head_roll",
-    "single_stroke": "open_mouth",
-    "back_forth_stroke": "open_mouth",
+    "static_touch": "head_roll",
+    "dynamic_touch": "open_mouth",
 }
 
 

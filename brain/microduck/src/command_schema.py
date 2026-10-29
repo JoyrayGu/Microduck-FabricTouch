@@ -14,7 +14,7 @@
 
 事件示例::
 
-    {"version": 1, "event_id": "8f2c...", "gesture": "tap",
+    {"version": 1, "event_id": "8f2c...", "gesture": "static_touch",
      "timestamp_ms": 1791500000000, "confidence": 0.92}
 
 brain 的应答示例::
@@ -31,11 +31,10 @@ from typing import Any, Dict, Optional, Tuple
 #: 协议版本。skin 与 brain 必须一致，否则拒收。
 PROTOCOL_VERSION: int = 1
 
-#: 允许的手势名。任何不在此集合中的手势一律拒绝。
+#: 允许的触觉语义名。任何不在此集合中的语义一律拒绝。
 ALLOWED_GESTURES: Tuple[str, ...] = (
-    "tap",
-    "single_stroke",
-    "back_forth_stroke",
+    "static_touch",
+    "dynamic_touch",
 )
 
 #: 单个事件 JSON 的最大字节数（防御性限制，避免超大报文）。

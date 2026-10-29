@@ -73,8 +73,8 @@ class CommandServer:
     def _on_action_start(self, action, event=None) -> None:
         # 附带 event_id / 手势名 / brain 侧接收时刻。
         #
-        # 为什么要带手势名：短促接触(tap)与滑动(single_stroke/back_forth_stroke)
-        # 现在映射到不同动作，但将来仍可能出现多个手势共用一个动作的情况，
+        #         为什么要带触觉语义名：静态触摸(static_touch)与动态触摸(dynamic_touch)
+                # 当前映射到不同动作，但将来仍可能出现多个语义共用一个动作的情况，
         # 只看 action 无法判断是哪一个手势触发的。
         # 为什么要带 event_id：skin 侧会打印同一条 event_id，两端据此精确对账，
         # 出现异常时能立刻区分「识别错了」「传输丢了」「硬件没动」。

@@ -26,7 +26,7 @@ def good_payload(**overrides):
     payload = {
         "version": S.PROTOCOL_VERSION,
         "event_id": "abc123",
-        "gesture": "tap",
+        "gesture": "static_touch",
         "timestamp_ms": 1_791_500_000_000,
         "confidence": 0.9,
     }
@@ -37,7 +37,7 @@ def good_payload(**overrides):
 class ParseEventTests(unittest.TestCase):
     def test_minimal_event_ok(self):
         event = S.parse_event(good_payload())
-        self.assertEqual(event.gesture, "tap")
+        self.assertEqual(event.gesture, "static_touch")
         self.assertEqual(event.event_id, "abc123")
         self.assertEqual(event.confidence, 0.9)
 
@@ -111,7 +111,7 @@ class ParseLineTests(unittest.TestCase):
     def test_round_trip_through_json(self):
         line = json.dumps(good_payload())
         event = S.parse_line(line)
-        self.assertEqual(event.gesture, "tap")
+        self.assertEqual(event.gesture, "static_touch")
 
     def test_bad_json_rejected(self):
         with self.assertRaises(S.SchemaError) as ctx:

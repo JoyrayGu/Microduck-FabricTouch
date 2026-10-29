@@ -29,7 +29,7 @@ def make_event(**overrides) -> S.GestureEvent:
     payload = {
         "version": S.PROTOCOL_VERSION,
         "event_id": overrides.pop("event_id", "e1"),
-        "gesture": overrides.pop("gesture", "tap"),
+        "gesture": overrides.pop("gesture", "static_touch"),
         "timestamp_ms": overrides.pop("timestamp_ms", NOW),
         "confidence": 0.9,
     }
@@ -53,8 +53,8 @@ def make_library() -> ActionLibrary:
     )
     return ActionLibrary(
         actions={"head_roll": roll, "open_mouth": mouth},
-        gesture_map={"tap": "head_roll", "single_stroke": "open_mouth",
-                     "back_forth_stroke": "open_mouth"},
+        gesture_map={"static_touch": "head_roll", "dynamic_touch": "open_mouth",
+                     "dynamic_touch": "open_mouth"},
     )
 
 
@@ -76,24 +76,24 @@ class DispatcherHarness:
 
 
 class AcceptTests(unittest.TestCase):
-    def test_tap_accepted_and_runs_head_roll(self):
+    def test_static_touch_accepted_and_runs_head_roll(self):
         h = DispatcherHarness()
-        decision = h.dispatcher.submit(make_event(gesture="tap"))
+        decision = h.dispatcher.submit(make_event(gesture="static_touch"))
         self.assertTrue(decision.accepted)
         self.assertEqual(decision.action, "head_roll")
         self.assertEqual(h.started[0].name, "head_roll")
         self.assertEqual(h.ended[-1], ("head_roll", "done"))
         self.assertTrue(h.steps, "应产生至少一帧输出")
 
-    def test_back_forth_stroke_runs_open_mouth(self):
+    def test_dynamic_touch_runs_open_mouth(self):
         h = DispatcherHarness()
-        decision = h.dispatcher.submit(make_event(gesture="back_forth_stroke", event_id="w1"))
+        decision = h.dispatcher.submit(make_event(gesture="dynamic_touch", event_id="w1"))
         self.assertTrue(decision.accepted)
         self.assertEqual(decision.action, "open_mouth")
 
     def test_steps_only_touch_declared_servos(self):
         h = DispatcherHarness()
-        h.dispatcher.submit(make_event(gesture="tap"))
+        h.dispatcher.submit(make_event(gesture="static_touch"))
         touched = set()
         for step in h.steps:
             touched.update(step.keys())
@@ -121,7 +121,7 @@ class RejectTests(unittest.TestCase):
         h = DispatcherHarness()
         lib = ActionLibrary(actions={}, gesture_map={})
         d = D.ActionDispatcher(library=lib, now_ms=lambda: NOW, sleep=lambda _: None)
-        event = make_event(gesture="tap")
+        event = make_event(gesture="static_touch")
         decision = d.submit(event)
         self.assertFalse(decision.accepted)
         self.assertEqual(decision.reason, "no_action")
@@ -160,7 +160,7 @@ class StatsTests(unittest.TestCase):
 class ActionStartEventTests(unittest.TestCase):
     """``on_action_start`` 必须把触发本次动作的事件一并传出。
 
-    动机：``tap`` 与 ``single_stroke`` 都映射到 ``head_roll``，只记录动作名
+    动机：``static_touch`` 与 ``dynamic_touch`` 都映射到 ``head_roll``，只记录动作名
     无法判断是哪个手势触发的；带上 ``event_id`` 后可与 skin 侧日志精确对账。
     """
 
@@ -176,8 +176,8 @@ class ActionStartEventTests(unittest.TestCase):
             now_ms=lambda: NOW,
             sleep=lambda _: None,
         )
-        d.submit(make_event(gesture="back_forth_stroke", event_id="abc123"))
-        self.assertEqual(seen, [("open_mouth", "back_forth_stroke", "abc123")])
+        d.submit(make_event(gesture="dynamic_touch", event_id="abc123"))
+        self.assertEqual(seen, [("open_mouth", "dynamic_touch", "abc123")])
 
     def test_legacy_single_argument_callback_still_works(self):
         seen = []
@@ -191,7 +191,7 @@ class ActionStartEventTests(unittest.TestCase):
             now_ms=lambda: NOW,
             sleep=lambda _: None,
         )
-        d.submit(make_event(gesture="tap"))
+        d.submit(make_event(gesture="static_touch"))
         self.assertEqual(seen, ["head_roll"])
 
     def test_callback_reassigned_after_construction_is_detected(self):
