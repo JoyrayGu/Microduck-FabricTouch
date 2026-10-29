@@ -61,6 +61,9 @@ microduck-deploy/
 
 ## 1.5 触觉命令服务器（Milestone 1）
 
+Pi 真机运行时需要在 `/home/pi4/microduck_venv` 中安装 [brain/requirements.txt](requirements.txt)；
+默认 dry-run 模式不导入舵机 SDK。
+
 笔记本（`microduck_skin`）识别出触觉手势后，通过局域网把**手势名**发给大脑；
 大脑做**最终安全判定**并驱动头部动作。这是"常驻实时"链路，与前面用 SSH 启脚本
 （部署/运维）不是一回事——命令服务器长期运行、不每次重启进程。
@@ -78,7 +81,7 @@ python -m microduck.src.command_server --enable-hardware --port-name /dev/ttyACM
 
 ```jsonc
 // skin -> brain（手势事件，不含任何舵机参数）
-{"v":1,"type":"gesture","event_id":"…","gesture":"tap","timestamp":…}
+{"v":1,"type":"gesture","event_id":"…","gesture":"static_touch","timestamp_ms":…}
 // brain -> skin（一行应答）
 {"v":1,"ok":true,"event_id":"…","action":"head_roll","reason":"ok"}
 ```
@@ -87,9 +90,8 @@ python -m microduck.src.command_server --enable-hardware --port-name /dev/ttyACM
 
 | 手势 | 动作 | 实际驱动 | 说明 |
 | --- | --- | --- | --- |
-| `tap` | `head_roll` | **仅 ID14** | 短促接触 → 左右歪头（约 1.4s） |
-| `single_stroke` | `open_mouth` | **仅 ID15** | 单向滑动 → 张嘴再闭合（约 0.65s） |
-| `back_forth_stroke` | `open_mouth` | **仅 ID15** | 来回抚摸 → 同一个张嘴动作 |
+| `static_touch` | `head_roll` | **仅 ID14** | 接触轨迹不足以构成有效滑移 → 左右歪头（约 1.4s） |
+| `dynamic_touch` | `open_mouth` | **仅 ID15** | 形成有效滑移轨迹（单程、往返或部分滑移）→ 张嘴再闭合（约 0.65s） |
 
 > 设计取舍（2026-10-22 确认）：最终形态是把织物装到鸭头上。用户持续触摸时，
 > 头部不停做动作会明显影响体验，因此「持续滑动」只给一次短促的张嘴，

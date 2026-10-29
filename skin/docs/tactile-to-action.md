@@ -1,24 +1,24 @@
 # Microduck 触觉 → 动作链路
 
-把电子触觉皮肤（64×64 压力阵列）贴在机器鸭头部，用户触摸时由 Windows 端识别手势，
+把电子触觉皮肤（当前标准阵列为 32×32）贴在机器鸭头部，用户触摸时由 Windows 端识别触觉语义，
 经 TCP 发给树莓派上的 brain，由它驱动舵机做出对应动作。
 
 ```
 触觉皮肤 ──USB(9600)──> Windows ──TCP:9000──> 树莓派 brain ──UART(1Mbps)──> 舵机
                         │                       │
                    手势识别                 动作调度
-                 tap/stroke             head_roll/open_mouth
+          static_touch/dynamic_touch    head_roll/open_mouth
 ```
 
 ## 当前手势 → 动作映射
 
 | 手势 | 判定依据 | 动作 | 驱动舵机 | 时长 |
 | --- | --- | --- | --- | --- |
-| `tap` | 轨迹 < 3.0 格，按住 80–1200 ms | `head_roll` 左右歪头 | 仅 ID14 横滚 | 1.4 s |
-| `single_stroke` | 轨迹 ≥ 3.0 格，直线度 > 0.7 | `open_mouth` 张嘴再闭合 | 仅 ID15 嘴部 | 0.65 s |
-| `back_forth_stroke` | 轨迹 ≥ 3.0 格，直线度 < 0.7 | `open_mouth` 同一个张嘴动作 | 仅 ID15 嘴部 | 0.65 s |
+| `static_touch` | 接触轨迹不足以构成有效滑移，且接触时长在 80–1200 ms | `head_roll` 左右歪头 | 仅 ID14 横滚 | 约 1.4 s |
+| `dynamic_touch` | 接触形成足够长的有效滑移轨迹；包含单程、往返和部分滑移 | `open_mouth` 张嘴再闭合 | 仅 ID15 嘴部 | 约 0.65 s |
 
-直线度 = 净位移 / 累计路程。实测单程滑动 0.986–0.998，来回抚摸 0.085–0.094，分离度很大。
+当前机器人接口只输出 `static_touch` / `dynamic_touch` 两种语义。多点状态通过事件字段记录，
+当前动作映射仍由 Brain 按这两种语义处理。
 
 `head_wag`（ID13 转头）已完成标定，但当前没有手势映射，作为备用动作保留。
 
@@ -29,7 +29,7 @@
 | 项目 | 值 |
 | --- | --- |
 | 触觉皮肤 | USB `0483:5740`，COM 口，9600 baud |
-| 阵列 | **64×64**，16-bit 大端，2050 字节载荷，40 Hz |
+| 阵列 | **32×32**，16-bit 大端，约 2050 字节载荷，约 40 Hz |
 | 舵机总线 | `/dev/ttyACM0`，1 Mbps，Protocol 2.0 |
 | 树莓派 | `pi4@192.168.1.57`（主机名 `duck`） |
 
@@ -187,15 +187,15 @@ skin 侧已用 `time.time()`（墙钟）生成时间戳，若出现这个错误�
 2. `--threshold` 是否太高？
    - 实测轻点峰值 66–248，噪声地板 0–8。`--threshold 20` 对应软件阈值 12，通常够用
 3. 手势动作是否符合判定条件？
-   - `tap` 需要按住 80–1200 ms
-   - 滑动需要轨迹 ≥ 3.0 格（约 1 cm）
+   - `static_touch` 需要有效接触持续 80–1200 ms，且轨迹不足以构成滑移
+   - `dynamic_touch` 需要形成累计轨迹 ≥ 3.0 格
 
 ### 舵机动但动作不对
 
 用 `play_action` 单独验证动作序列（绕过触觉与网络）：
 
 ```powershell
-cd E:\OneDrive\MatNgine\microduck_behavior_control
+cd E:\OneDrive\MatNgine\Microduck-FabricTouch\tools
 $env:PYTHONPATH="src"
 E:\MiniConda\python.exe -m microduck_behavior_control.play_action --action tilt_head_smooth --execute
 E:\MiniConda\python.exe -m microduck_behavior_control.play_action --action mouth_open_close --execute
@@ -228,8 +228,8 @@ E:\MiniConda\python.exe -m microduck_behavior_control.play_action --action mouth
 
 ### 已验证
 
-- 64×64 触觉阵列读取，40 Hz，零丢帧
-- 三种手势识别（单指单点场景）
+- 32×32 触觉阵列读取，当前设备约 40 Hz
+- `static_touch` / `dynamic_touch` 两种机器人触觉语义
 - 手势 → brain → 舵机的完整链路
 - `event_id` 全链路对账
 

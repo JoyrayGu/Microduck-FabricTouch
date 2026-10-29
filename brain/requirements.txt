@@ -1,0 +1,3 @@
+# Raspberry Pi / Brain hardware runtime
+# Install inside the Pi virtual environment, not on the Laptop skin environment.
+dynamixel-sdk>=3.7.31

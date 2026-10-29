@@ -1,14 +1,13 @@
 # Microduck-FabricTouch
 
-织物触觉 → 手势识别 → 舵机动作的完整链路。把电子触觉皮肤（64×64 压力阵列）贴合在
-机器鸭头部，用户抚摸时由 Windows 端识别手势，经 TCP 发给树莓派上的 brain，
+织物触觉 → 语义识别 → 舵机动作的完整链路。当前标准织物皮肤输出 32×32 压力阵列，
+贴合在机器鸭头部时由 Windows 端识别触觉语义，经 TCP 发给树莓派上的 brain，
 由它驱动舵机做出对应动作。
 
 ```
 触觉皮肤 ──USB(9600)──> Windows ──TCP:9000──> 树莓派 brain ──UART(1Mbps)──> 舵机
                          │                      │
-                    手势识别                动作调度
-                  tap / stroke        head_roll / open_mouth
+                static_touch / dynamic_touch   head_roll / open_mouth
 ```
 
 ## 目录结构
@@ -42,13 +41,13 @@ E:\MiniConda\python.exe run.py --robot --brain-host 192.168.1.57 --brain-port 90
 
 ## 手势 → 动作
 
-| 手势 | 判定依据 | 动作 | 驱动舵机 |
+| 语义 | 判定依据 | 动作 | 驱动舵机 |
 | --- | --- | --- | --- |
-| `tap` | 轨迹 < 3.0 格，按住 80–1200 ms | `head_roll` 左右歪头（1.4 s） | 仅 ID14 横滚 |
-| `single_stroke` | 轨迹 ≥ 3.0 格，直线度 > 0.7 | `open_mouth` 张嘴再闭合（0.65 s） | 仅 ID15 嘴部 |
-| `back_forth_stroke` | 轨迹 ≥ 3.0 格，直线度 < 0.7 | `open_mouth` 同一个张嘴动作 | 仅 ID15 嘴部 |
+| `static_touch` | 接触轨迹不足以构成有效滑移，且接触时长在 80–1200 ms | `head_roll` 左右歪头（约 1.4 s） | 仅 ID14 横滚 |
+| `dynamic_touch` | 接触形成足够长的有效滑移轨迹；包含单程、往返和部分滑移 | `open_mouth` 张嘴再闭合（约 0.65 s） | 仅 ID15 嘴部 |
 
-直线度 = 净位移 / 累计路程。实测单程 0.986–0.998、来回 0.085–0.094，分离度很大。
+当前机器人接口只输出这两种语义。多点事件还会附带接触模式、移动接触数和静止接触数；
+这些字段用于诊断，当前 Brain 动作映射仍按 `static_touch` / `dynamic_touch` 处理。
 
 ## 实测标定
 
@@ -65,17 +64,24 @@ E:\MiniConda\python.exe run.py --robot --brain-host 192.168.1.57 --brain-port 90
 
 **已验证**
 
-- 64×64 触觉阵列读取，40 Hz，零丢帧
-- 三种手势识别（单指单点场景）
-- 手势 → brain → 舵机完整链路，`event_id` 可全链路对账
+- 32×32 触觉阵列读取，当前设备约 40 Hz
+- `static_touch` / `dynamic_touch` 两种机器人触觉语义
+- 单点、多点以及部分滑移状态字段可通过事件日志观察
+- 触觉语义 → brain → 舵机完整链路，`event_id` 可全链路对账
 
 **未解决**
 
 | 问题 | 影响 |
 | --- | --- |
 | 颈部（ID11/12/13）零力矩 | 用户摸头时头部会被手推动 |
-| 多点接触只取第一个接触点 | 多指或手指+鱼际同时接触时质心失真 |
-| 部分滑移 / 部分静止无法区分 | 一指滑动、另一指静止时全局质心被稀释 |
+| 新曲面皮肤尚未适配 | 需要重新确认阵列尺寸、通道顺序、有效区域和压力基线 |
+| 曲面安装后的识别阈值尚未重标定 | 旧皮肤参数可能不适用于新皮肤的灵敏度与预载 |
+
+## 依赖
+
+Laptop 端依赖见 [skin/requirements.txt](skin/requirements.txt)，用于 USB/BLE 触觉采集和可选鼠标后端。
+Pi 端真机依赖见 [brain/requirements.txt](brain/requirements.txt)，应安装到
+`/home/pi4/microduck_venv`；Brain 的 dry-run 测试不需要 `dynamixel-sdk`。
 
 ## 测试
 

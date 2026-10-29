@@ -78,11 +78,10 @@ python run.py --robot                            # 用真皮肤（USB）连大�
 
 **手势 → 动作映射**（动作语义完全由大脑决定，皮肤只发手势名）：
 
-| 手势 | 大脑动作 | 说明 |
+| 语义 | Brain 动作 | 说明 |
 | --- | --- | --- |
-| `tap` | `tilt_head` | 轻点 |
-| `single_stroke` | `tilt_head` | 单向划一笔 |
-| `back_forth_stroke` | `head_wag` | 来回划（左右摇头） |
+| `static_touch` | `head_roll` | 接触轨迹不足以构成有效滑移，驱动 ID14 横滚 |
+| `dynamic_touch` | `open_mouth` | 形成有效滑移轨迹，驱动 ID15 开合嘴 |
 
 常用参数：
 

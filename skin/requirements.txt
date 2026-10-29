@@ -1,5 +1,6 @@
-# ---- 必需：USB 通道（默认）----
-# 设备通过 USB 枚举成虚拟串口（CDC / USB 转串口），因此需要 pyserial
+# Laptop / skin 端依赖
+# 当前触觉设备通过 USB 枚举为虚拟串口（CDC / USB 转串口）。
+# `run.py --robot` 连接 Brain 使用 Python 标准库 TCP，不需要额外网络包。
 pyserial>=3.5
 
 # ---- 可选：蓝牙 BLE 通道（--ble）----
