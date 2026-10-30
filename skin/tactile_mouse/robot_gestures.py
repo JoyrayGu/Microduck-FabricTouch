@@ -1,19 +1,16 @@
 """@file robot_gestures.py
-@brief 面向机器人的时序手势识别器（tap / single_stroke / back_forth_stroke）。
+@brief 面向机器人的时序触觉语义识别器（static_touch / dynamic_touch）。
 
 与 ``gestures.py``（鼠标手势）**互不复用状态**，因为两者的语义与阈值不同：
 
 * 鼠标手势关心「点击 / 拖动 / 滚动」；
 * 机器人手势关心「接触点如何移动」，用于驱动鸭子做可爱动作。
 
-三种手势
---------
-============ ==========================================================
-tap          短暂的接触：按住时间短、质心几乎不动，随后抬手。
-single_stroke 持续接触：质心沿连续、基本单向的路径移动，随后抬手。
-back_forth   持续接触：累计轨迹足够长，且出现至少一次有效方向反转，
-             随后抬手。
-============ ==========================================================
+两种触觉语义
+------------
+静态触摸（static_touch）：接触期间没有形成足够长的有效滑动轨迹。
+动态触摸（dynamic_touch）：接触期间形成了单向、来回或部分滑移轨迹。
+
 
 重要语义澄清
 ------------
@@ -23,6 +20,7 @@ back_forth   持续接触：累计轨迹足够长，且出现至少一次有效�
 
 from __future__ import annotations
 
+import itertools
 import math
 import time
 from dataclasses import dataclass, field
@@ -36,9 +34,21 @@ from .features import TactileState
 
 
 class RobotGesture(str, Enum):
-    TAP = "tap"
-    SINGLE_STROKE = "single_stroke"
-    BACK_FORTH_STROKE = "back_forth_stroke"
+    STATIC_TOUCH = "static_touch"
+    DYNAMIC_TOUCH = "dynamic_touch"
+
+
+class ContactMode(str, Enum):
+    SINGLE = "single"
+    MULTI = "multi"
+
+
+class MotionMode(str, Enum):
+    STATIC = "static"
+    FULL_SLIP = "full_slip"
+    PARTIAL_SLIP = "partial_slip"
+    STATIONARY = "stationary"
+    UNKNOWN = "unknown"
 
 
 @dataclass
@@ -49,6 +59,10 @@ class RobotGestureEvent:
     timestamp: float
     confidence: float = 1.0
     direction: Optional[str] = None
+    contact_mode: ContactMode = ContactMode.SINGLE
+    motion_mode: MotionMode = MotionMode.UNKNOWN
+    moving_contacts: int = 0
+    stationary_contacts: int = 0
     start: Optional[Tuple[float, float]] = None
     end: Optional[Tuple[float, float]] = None
     data: Dict[str, Any] = field(default_factory=dict)
@@ -126,11 +140,38 @@ class RobotGestureRecognizer:
         self._pending_release_at: Optional[float] = None
         #: 挂起期间观察到的最低峰值，用于判断压力是否真正归零。
         self._gap_min_peak = float("inf")
+        self._contact_mode = ContactMode.SINGLE
+        self._motion_mode = MotionMode.UNKNOWN
+        self._moving_contacts = 0
+        self._stationary_contacts = 0
+        self._previous_contacts = []
+        self._active_motion_frames = 0
+        self._multi_motion_frames = 0
+        self._contact_mode = ContactMode.SINGLE
+        self._motion_mode = MotionMode.UNKNOWN
+        self._moving_contacts = 0
+        self._stationary_contacts = 0
 
     # ------------------------------------------------------------------ #
     @property
     def in_contact(self) -> bool:
         return self._active
+
+    @property
+    def contact_mode(self) -> ContactMode:
+        return self._contact_mode
+
+    @property
+    def motion_mode(self) -> MotionMode:
+        return self._motion_mode
+
+    @property
+    def moving_contacts(self) -> int:
+        return self._moving_contacts
+
+    @property
+    def stationary_contacts(self) -> int:
+        return self._stationary_contacts
 
     # ------------------------------------------------------------------ #
     def update(self, state: TactileState) -> List[RobotGestureEvent]:
@@ -157,6 +198,24 @@ class RobotGestureRecognizer:
         # 中间那次被切成 3 个 single_stroke。
         #
         # 质心缺失时保持上一次位置、继续同一次接触；只有 active 变假才进消抖。
+        if (
+            self._active
+            and state.active
+            and state.centroid is None
+            and not state.contacts
+            and state.peak <= self.cfg.release_contactless_peak
+        ):
+            # Residual pressure without a contact cluster is release evidence.
+            state = TactileState(
+                raw=state.raw,
+                grid=state.grid,
+                total=0.0,
+                peak=state.peak,
+                active=False,
+                frame_no=state.frame_no,
+                timestamp=state.timestamp,
+            )
+
         if state.active:
             # 压力恢复：撤销挂起的释放，继续同一次接触。
             #
@@ -169,6 +228,7 @@ class RobotGestureRecognizer:
             # 位置判据已移除；分离多次点击留给活跃段的时长判据处理。
             self._pending_release_at = None
             if state.centroid is not None:
+                self._update_contact_modes(state)
                 events.extend(self._update_active(state, state.centroid, t))
             else:
                 # 无质心：只推进时间戳，不改变轨迹（避免跳变污染 path_len）。
@@ -213,6 +273,67 @@ class RobotGestureRecognizer:
         return events
 
     # ------------------------------------------------------------------ #
+    def _update_contact_modes(self, state: TactileState) -> None:
+        """Track coarse multi-contact motion relative to the prior frame.
+
+        Contact centroids are matched to the previous frame with a global
+        minimum-distance assignment, preserving identity when pressure sorting
+        changes between frames.
+        """
+        current = state.contacts
+        if not current:
+            return
+        previous = self._previous_contacts
+        threshold = self.cfg.stroke_pause_tol
+        moving = 0
+        stationary = 0
+        # Match the small contact sets globally instead of greedily. Greedy
+        # matching can swap two nearby contacts when their pressure weights change.
+        pairs = []
+        if previous:
+            match_count = min(len(current), len(previous))
+            for current_indices in itertools.combinations(range(len(current)), match_count):
+                for previous_indices in itertools.permutations(range(len(previous)), match_count):
+                    cost = sum(
+                        math.hypot(
+                            current[i].cx - previous[j].cx,
+                            current[i].cy - previous[j].cy,
+                        )
+                        for i, j in zip(current_indices, previous_indices)
+                    )
+                    pairs.append((cost, current_indices, previous_indices))
+        if pairs:
+            _cost, current_indices, previous_indices = min(pairs, key=lambda item: item[0])
+            for i, j in zip(current_indices, previous_indices):
+                distance = math.hypot(
+                    current[i].cx - previous[j].cx,
+                    current[i].cy - previous[j].cy,
+                )
+                if distance > threshold:
+                    moving += 1
+                else:
+                    stationary += 1
+        self._previous_contacts = list(current)
+        self._contact_mode = ContactMode.MULTI if len(current) > 1 else ContactMode.SINGLE
+        if self._contact_mode is ContactMode.MULTI and moving:
+            self._multi_motion_frames += 1
+        else:
+            self._multi_motion_frames = 0
+        self._moving_contacts = moving
+        self._stationary_contacts = stationary
+        if not previous:
+            self._motion_mode = MotionMode.UNKNOWN
+        elif len(current) == 1 and moving:
+            self._motion_mode = MotionMode.FULL_SLIP
+        elif moving and stationary:
+            self._motion_mode = MotionMode.PARTIAL_SLIP
+        elif stationary:
+            self._motion_mode = MotionMode.STATIONARY
+        elif moving:
+            self._motion_mode = MotionMode.FULL_SLIP
+        else:
+            self._motion_mode = MotionMode.UNKNOWN
+
     def _update_active(
         self,
         state: TactileState,
@@ -242,23 +363,23 @@ class RobotGestureRecognizer:
             self._path = [xy]
             return []
 
-        # 累计路程必须在**所有**分支之前累加。
-        #
-        # 曾经只在「既不是跳变、也不是停顿」的分支里累加，导致
-        # straightness = net/path_len 出现数学上不可能的 >1 值（实测
-        # 1.225、1.247）。原因：跳变与大位移帧会更新 _last_xy（抬高 net）
-        # 却不计入 path_len；微小位移帧同样只更新位置不计路程。
-        # 三角不等式要求「路程 >= 直线距离」，所以这一步必须先做。
-        self._path_len += step
-
         if step > self.cfg.stroke_max_step:
-            # 质心跳变（快速滑动 / 多指跳转）：不并入方向统计，但位移
-            # 确实发生过，路程已在上方计入。
+            # Contact-cluster reassignment can jump the global centroid. Treat it
+            # as a tracking discontinuity, not as physical sliding distance.
             self._last_xy = xy
             self._last_time = t
-            if self._start_xy is not None:
-                self._max_move = max(self._max_move, _euclid(xy, self._start_xy))
             return []
+
+        # A multi-contact stationary frame can move the global centroid solely
+        # because pressure shifts between fingers. Only moving contact clusters
+        # contribute to the dynamic trajectory.
+        multi_motion_confirmed = self._multi_motion_frames >= 3
+        if not (
+            self._contact_mode is ContactMode.MULTI
+            and self._motion_mode is MotionMode.STATIONARY
+        ) and (self._contact_mode is not ContactMode.MULTI or multi_motion_confirmed) \
+                and step > self.cfg.stroke_pause_tol:
+            self._path_len += step
 
         if step <= self.cfg.stroke_pause_tol:
             self._pause_ms += dt_ms
@@ -438,18 +559,22 @@ class RobotGestureRecognizer:
         )
 
         if not is_stroke:
-            # 轨迹不够长 -> 这是一次「按压」而不是「滑动」。
+                    # 轨迹不够长 -> 静态触摸。
             # 短于 min_contact_ms 的接触视为噪声：实测输出里大量
             # held_ms=50 drift=0.0 path_len=0.0 的幽灵事件会误触发真实动作。
             if held_ms < self.cfg.min_contact_ms:
                 return None
-            # 按住过久（比如手掌一直搭着）不算 tap，避免误触发。
+            # 按住过久（比如手掌一直搭着）不算静态事件，避免误触发。
             if held_ms > self.cfg.press_max_ms:
                 return None
             return RobotGestureEvent(
-                RobotGesture.TAP,
+                RobotGesture.STATIC_TOUCH,
                 t,
                 confidence=1.0,
+                contact_mode=self._contact_mode,
+                motion_mode=self._motion_mode,
+                moving_contacts=self._moving_contacts,
+                stationary_contacts=self._stationary_contacts,
                 start=start_xy,
                 end=end_xy,
                 data={
@@ -477,10 +602,14 @@ class RobotGestureRecognizer:
 
         if straightness < self.cfg.back_forth_max_straightness:
             return RobotGestureEvent(
-                RobotGesture.BACK_FORTH_STROKE,
+                RobotGesture.DYNAMIC_TOUCH,
                 t,
                 confidence=self._stroke_confidence(net),
                 direction=direction,
+                contact_mode=self._contact_mode,
+                motion_mode=self._motion_mode,
+                moving_contacts=self._moving_contacts,
+                stationary_contacts=self._stationary_contacts,
                 start=start_xy,
                 end=end_xy,
                 data={
@@ -491,14 +620,18 @@ class RobotGestureRecognizer:
             )
 
         # 无有效反转、但净位移也很小：原地抖动把 path_len 累加到了阈值以上，
-        # 这不是有意的单向滑动。按 tap 处理，避免每次按住都触发动作。
+        # 这不是有意的单向滑动。按静态触摸处理。
         if net < self.cfg.stroke_min_net:
             if held_ms > self.cfg.press_max_ms:
                 return None
             return RobotGestureEvent(
-                RobotGesture.TAP,
+                RobotGesture.STATIC_TOUCH,
                 t,
                 confidence=1.0,
+                contact_mode=self._contact_mode,
+                motion_mode=self._motion_mode,
+                moving_contacts=self._moving_contacts,
+                stationary_contacts=self._stationary_contacts,
                 start=start_xy,
                 end=end_xy,
                 data={
@@ -509,10 +642,14 @@ class RobotGestureRecognizer:
             )
 
         return RobotGestureEvent(
-            RobotGesture.SINGLE_STROKE,
+            RobotGesture.DYNAMIC_TOUCH,
             t,
             confidence=self._stroke_confidence(net),
             direction=direction,
+            contact_mode=self._contact_mode,
+            motion_mode=self._motion_mode,
+            moving_contacts=self._moving_contacts,
+            stationary_contacts=self._stationary_contacts,
             start=start_xy,
             end=end_xy,
             data={

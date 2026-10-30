@@ -74,6 +74,11 @@ class RobotSession:
         # 单点毛刺由 min_contact_ms 过滤，不依赖这个格数。
         # 鼠标模式保持配置默认值（2），因为其既有整定基于该值。
         self.processor.cfg.min_active_cells = 1
+        # Robot event semantics need a stable contact count, while mouse mode
+        # retains the historical per-frame behavior unless explicitly enabled.
+        self.processor.cfg.contact_count_stability_frames = max(
+            0, self.processor.cfg.contact_count_stability_frames or 3
+        )
         self.recognizer = RobotGestureRecognizer(self.cfg.robot_gesture)
         self.link = link
 

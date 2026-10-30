@@ -56,6 +56,10 @@ def to_wire(
         "timestamp_ms": int(timestamp_ms),
         "confidence": round(float(event.confidence), 3),
     }
+    payload["contact_mode"] = event.contact_mode.value
+    payload["motion_mode"] = event.motion_mode.value
+    payload["moving_contacts"] = int(event.moving_contacts)
+    payload["stationary_contacts"] = int(event.stationary_contacts)
     if event.direction is not None:
         payload["direction"] = event.direction
     if event.start is not None:

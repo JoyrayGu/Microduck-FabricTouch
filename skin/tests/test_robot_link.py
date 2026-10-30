@@ -26,12 +26,17 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(_HERE))
 
 from tactile_mouse.config import RobotLinkConfig
-from tactile_mouse.robot_gestures import RobotGesture, RobotGestureEvent
+from tactile_mouse.robot_gestures import (
+    ContactMode,
+    MotionMode,
+    RobotGesture,
+    RobotGestureEvent,
+)
 from tactile_mouse.robot_link import client as C
 from tactile_mouse.robot_link import events as E
 
 
-def sample_event(gesture=RobotGesture.TAP, **overrides):
+def sample_event(gesture=RobotGesture.STATIC_TOUCH, **overrides):
     kwargs = dict(gesture=gesture, timestamp=1.0, confidence=0.9)
     kwargs.update(overrides)
     return RobotGestureEvent(**kwargs)
@@ -42,9 +47,13 @@ class WireFormatTests(unittest.TestCase):
         payload = E.to_wire(sample_event(), event_id="abc", timestamp_ms=1234)
         self.assertEqual(payload["version"], E.PROTOCOL_VERSION)
         self.assertEqual(payload["event_id"], "abc")
-        self.assertEqual(payload["gesture"], "tap")
+        self.assertEqual(payload["gesture"], "static_touch")
         self.assertEqual(payload["timestamp_ms"], 1234)
         self.assertIn("confidence", payload)
+        self.assertEqual(payload["contact_mode"], "single")
+        self.assertEqual(payload["motion_mode"], "unknown")
+        self.assertEqual(payload["moving_contacts"], 0)
+        self.assertEqual(payload["stationary_contacts"], 0)
 
     def test_timestamp_defaults_to_wall_clock(self):
         """默认 timestamp_ms 必须是**墙钟**毫秒，不能取自 event.timestamp。
@@ -112,14 +121,14 @@ class CrossRepoCompatibilityTests(unittest.TestCase):
         if not self.brain_available:
             self.skipTest("microduck_brain 不在同级目录，跳过跨仓协议校验")
 
-    def test_brain_parses_skin_tap(self):
+    def test_brain_parses_skin_static_touch(self):
         line = E.encode_line(E.to_wire(sample_event(), event_id="x1")).decode("utf-8")
         event = self.S.parse_line(line)
-        self.assertEqual(event.gesture, "tap")
+        self.assertEqual(event.gesture, "static_touch")
         self.assertEqual(event.event_id, "x1")
 
     def test_brain_parses_every_skin_gesture(self):
-        for g in (RobotGesture.TAP, RobotGesture.SINGLE_STROKE, RobotGesture.BACK_FORTH_STROKE):
+        for g in (RobotGesture.STATIC_TOUCH, RobotGesture.DYNAMIC_TOUCH, RobotGesture.DYNAMIC_TOUCH):
             line = E.encode_line(E.to_wire(sample_event(g))).decode("utf-8")
             event = self.S.parse_line(line)
             self.assertEqual(event.gesture, g.value)
@@ -234,7 +243,7 @@ class RobotLinkTcpTests(unittest.TestCase):
             "事件未在超时前到达假 brain",
         )
         payload = json.loads(self.brain.received[0])
-        self.assertEqual(payload["gesture"], "tap")
+        self.assertEqual(payload["gesture"], "static_touch")
         self.assertTrue(self.link.stats.sent >= 1)
 
     def test_reply_is_captured(self):
@@ -243,11 +252,11 @@ class RobotLinkTcpTests(unittest.TestCase):
         self.assertTrue(self.link.stats.last_reply.get("accepted"))
 
     def test_multiple_events_sent_in_order(self):
-        for gesture in (RobotGesture.TAP, RobotGesture.SINGLE_STROKE, RobotGesture.BACK_FORTH_STROKE):
+        for gesture in (RobotGesture.STATIC_TOUCH, RobotGesture.DYNAMIC_TOUCH, RobotGesture.DYNAMIC_TOUCH):
             self.link.send(sample_event(gesture))
         self.assertTrue(self._wait_for(lambda: len(self.brain.received) >= 3))
         got = [json.loads(line)["gesture"] for line in self.brain.received[:3]]
-        self.assertEqual(got, ["tap", "single_stroke", "back_forth_stroke"])
+        self.assertEqual(got, ["static_touch", "dynamic_touch", "dynamic_touch"])
 
 
 class ReplyParsingTests(unittest.TestCase):

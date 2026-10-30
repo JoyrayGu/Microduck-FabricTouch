@@ -383,15 +383,18 @@ def do_selftest(cfg: AppConfig) -> int:
 
 
 def run_robot_console(session, cfg: AppConfig, args: argparse.Namespace, stop_flag) -> int:
-    """机器人模式无界面运行：打印识别到的手势，Ctrl+C 退出。"""
+    """机器人模式无界面运行：持续打印触觉状态和识别到的手势。"""
     start = time.perf_counter()
 
     def _on_gesture(event):
         direction = f" {event.direction}" if getattr(event, "direction", None) else ""
-        print(f"[手势] {event.gesture.value}{direction} "
+        print(f"\n[手势] {event.gesture.value}{direction} "
+              f"contact={event.contact_mode.value} motion={event.motion_mode.value} "
+              f"moving={event.moving_contacts} stationary={event.stationary_contacts} "
               f"conf={getattr(event, 'confidence', 1.0):.2f}", flush=True)
 
     session.on_gesture = _on_gesture
+    last_print = 0.0
     target = (
         "dry-run（不发往 brain）"
         if session.dry_run
@@ -400,8 +403,24 @@ def run_robot_console(session, cfg: AppConfig, args: argparse.Namespace, stop_fl
     print(f"机器人模式已启动 -> {target}。Ctrl+C 退出。")
     while not stop_flag["stop"]:
         time.sleep(0.1)
-        if args.duration and time.perf_counter() - start >= args.duration:
+        now = time.perf_counter()
+        if args.duration and now - start >= args.duration:
             break
+        if now - last_print < 0.25:
+            continue
+        last_print = now
+        state = session.last_state
+        if state is None:
+            continue
+        centroid = "%.1f,%.1f" % state.centroid if state.centroid else "--,--"
+        recognizer = session.recognizer
+        line = (
+            f"\r[状态] active={int(state.active)} contacts={state.n_contacts} "
+            f"motion={recognizer.motion_mode.value} "
+            f"moving={recognizer.moving_contacts} stationary={recognizer.stationary_contacts} "
+            f"peak={state.peak:.0f} total={state.total:.0f} centroid={centroid}"
+        )
+        print(line.ljust(150), end="", flush=True)
     print()
     return 0
 
@@ -539,7 +558,7 @@ def _run_robot_mode(cfg: AppConfig, args: argparse.Namespace, kind: str, mock_mo
     )
     print(f"机器人模式  通道={kind}  {detail}")
     print(f"  -> brain: {target}")
-    print("  手势映射：tap/single_stroke -> tilt_head，back_forth_stroke -> head_wag")
+    print("  语义映射：static_touch -> head_wag (ID13)，dynamic_touch -> open_mouth (ID15)")
     print("  注意：本模式不会注入任何鼠标事件。")
 
     # 只有在没有 external transport 的情况下才用模拟源；有硬件则复用 make_transport。

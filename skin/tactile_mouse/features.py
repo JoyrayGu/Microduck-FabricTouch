@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import math
+import statistics
 import time
 from collections import deque
 from dataclasses import dataclass, field
@@ -102,6 +103,9 @@ class TactileProcessor:
         self.baseline: List[float] = [0.0] * n
         self._calib_samples: List[List[float]] = []
         self._ema: Optional[List[float]] = None
+        self._published_contact_count = 0
+        self._candidate_contact_count: Optional[int] = None
+        self._candidate_contact_frames = 0
         # 不需要校准就直接认为已校准
         self._calib_done = self.cfg.baseline_frames <= 0
 
@@ -123,7 +127,11 @@ class TactileProcessor:
         if len(self._calib_samples) < self.cfg.baseline_frames:
             return False
         n = len(self._calib_samples[0])
-        self.baseline = [sum(s[i] for s in self._calib_samples) / len(self._calib_samples) for i in range(n)]
+        # A transient touch during calibration must not raise every channel's zero.
+        self.baseline = [
+            float(statistics.median(s[i] for s in self._calib_samples))
+            for i in range(n)
+        ]
         self._calib_samples.clear()
         self._calib_done = True
         self._ema = None
@@ -137,6 +145,38 @@ class TactileProcessor:
 
     def reset_ema(self) -> None:
         self._ema = None
+        self._published_contact_count = 0
+        self._candidate_contact_count = None
+        self._candidate_contact_frames = 0
+
+    def _stabilize_contacts(self, contacts: List[Contact]) -> List[Contact]:
+        """Suppress short-lived contact-count changes caused by split peaks."""
+        count = len(contacts)
+        required = max(0, int(self.cfg.contact_count_stability_frames))
+        if required <= 1:
+            self._published_contact_count = count
+            return contacts
+        if self._published_contact_count == 0 and count > 0:
+            self._published_contact_count = count
+            self._candidate_contact_count = None
+            self._candidate_contact_frames = 0
+            return contacts
+        if count == self._published_contact_count:
+            self._candidate_contact_count = None
+            self._candidate_contact_frames = 0
+            return contacts
+        if count != self._candidate_contact_count:
+            self._candidate_contact_count = count
+            self._candidate_contact_frames = 1
+        else:
+            self._candidate_contact_frames += 1
+        if self._candidate_contact_frames < required:
+            target = self._published_contact_count
+            return contacts[:target] if target else []
+        self._published_contact_count = count
+        self._candidate_contact_count = None
+        self._candidate_contact_frames = 0
+        return contacts
 
     # -- 逐帧处理 ---------------------------------------------------------- #
     def process(
@@ -179,13 +219,16 @@ class TactileProcessor:
         state = TactileState(raw=list(raw), grid=clean, peak=peak,
                              frame_no=frame_no, timestamp=t)
         if active_cells < self.cfg.min_active_cells:
+            self._published_contact_count = 0
+            self._candidate_contact_count = None
+            self._candidate_contact_frames = 0
             return state
 
         state.active = True
         state.total = sum(clean[i] for i in range(n) if mask[i])
 
         # 5) 连通域分割 -> 多指接触点
-        state.contacts = self._find_contacts(clean, mask)
+        state.contacts = self._stabilize_contacts(self._find_contacts(clean, mask))
         if state.contacts:
             px, py = self._to_grid_xy(state.contacts[0].cx, state.contacts[0].cy)
             state.centroid = (px, py)
@@ -224,6 +267,9 @@ class TactileProcessor:
         4. 每簇算质心/峰值/面积，丢掉太小的簇。
 
         这样即使两指的中间谷值没降到阈值以下，也能正确分成两个接触点。
+
+        注意：单点自然接触的相邻压力峰可能与真实双点的峰距重叠，
+        因此空间分割不擅自扩大合并半径；接触数量的连续稳定由上层迟滞处理。
         """
         rows, cols = self.rows, self.cols
         peaks = self._local_peaks(grid, mask)

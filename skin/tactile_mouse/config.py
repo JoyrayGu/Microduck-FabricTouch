@@ -56,6 +56,11 @@ class FilterConfig:
     merge_radius_cells: float = 1.6
     #: 最多同时跟踪的接触点数量（多指）
     max_contacts: int = 3
+    #: 接触数量改变后，需连续保持这么多帧才对外发布，0 = 关闭。
+    #: 用于抑制轻触时局部峰值导致的 1/2/3 区跳变，不改变压力场。
+    contact_count_stability_frames: int = 0
+    #: 空间峰合并仍只处理明确相邻的峰。不要仅靠扩大该半径区分单点
+    #: 与多点：真实数据中的峰间距和压力比例存在重叠，需结合连续帧语义。
 
 
 @dataclass
@@ -127,8 +132,8 @@ class MappingConfig:
 class RobotGestureConfig:
     """机器人手势识别参数（与鼠标手势**分开**，避免互相干扰）。
 
-    这里只负责把压力场变成 tap / single_stroke / back_forth_stroke 三种
-    与动作无关的手势事件。动作语义由 brain 端决定。
+    这里只负责把压力场变成 static_touch / dynamic_touch 两种
+        与动作无关的触觉语义事件。动作语义由 brain 端决定。
     """
 
     #: 接触期间质心位移小于此值（格）才可能判为 tap。
@@ -162,6 +167,9 @@ class RobotGestureConfig:
     #: 实测真实抬手的空档内最低峰为 0.0~0.5，内部碎片最低峰为 1.7~157.8。
     #: 取 1.0 落在两组之间。
     release_zero_peak: float = 1.0
+    #: 没有可分割接触簇时的残余压力上限。用于滑移抬手后的尾部压力，
+    #: 不把无质心残留帧无限期视为仍在接触。
+    release_contactless_peak: float = 25.0
     #: 压力未归零时的兜底超时（毫秒）：超过它再久也判抬手。
     #:
     #: 防止「手一直搭着但压力始终略高于零」的情况永远不出结果。

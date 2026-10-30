@@ -45,12 +45,12 @@ class DryRunTests(unittest.TestCase):
     def test_dry_run_does_not_send(self):
         sess, link = _session(dry_run=True)
         # 绕开传输层，直接喂状态给识别器路径。
-        sess._emit(RobotGestureEvent(RobotGesture.TAP, timestamp=1.0))
+        sess._emit(RobotGestureEvent(RobotGesture.STATIC_TOUCH, timestamp=1.0))
         self.assertEqual(link.sent, [])
 
     def test_emit_sends_when_not_dry_run(self):
         sess, link = _session(dry_run=False)
-        sess._emit(RobotGestureEvent(RobotGesture.TAP, timestamp=1.0))
+        sess._emit(RobotGestureEvent(RobotGesture.STATIC_TOUCH, timestamp=1.0))
         self.assertEqual(len(link.sent), 1)
 
 
@@ -79,7 +79,7 @@ class FeedTests(unittest.TestCase):
         self._t = t
         return events
 
-    def test_tap_reaches_link(self):
+    def test_static_touch_reaches_link(self):
         sess, link = _session(dry_run=False)
         # 先用静止帧完成零点校准（baseline_frames 默认 >0 时会自动收集）。
         for _ in range(sess.cfg.filter.baseline_frames or 1):
@@ -99,8 +99,8 @@ class FeedTests(unittest.TestCase):
             ]
             + [None] * release_frames,
         )
-        self.assertTrue(any(e.gesture is RobotGesture.TAP for e in link.sent),
-                        f"未识别到 tap: {link.sent}")
+        self.assertTrue(any(e.gesture is RobotGesture.STATIC_TOUCH for e in link.sent),
+                        f"未识别到 static_touch: {link.sent}")
 
 
 if __name__ == "__main__":
